@@ -26,8 +26,8 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
       crossorigin="anonymous">
 
     <style type="text/css">
-      h1, p {
-        padding-left: 50px;
+      h1, p, select {
+        margin-left: 50px;
       }
 
       .container > div:nth-of-type(odd) {
@@ -59,9 +59,8 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
 
       // retrieve listings from etsy
       .service('etsyService', function($http) {
-        var etsy_api = "https://openapi.etsy.com/v2/listings/active?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&location=Los Angeles,CA&limit=25";
-        this.getListings = function() {
-          return $http.get(etsy_api);
+        this.getListings = function(url) {
+          return $http.get(url);
         }
       })
 
@@ -76,14 +75,33 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
       .directive('ngEtsy', function ($http) {
         return {
           controller: function ($scope, etsyService) {
-            etsyService.getListings().then(function(dataResponse) {
-              $scope.listings = dataResponse.data.results;
-              // console.log($scope.listings);
-            });
+            this.selectType = 'jewelry';
+
+            this.populateList = function() {
+              var etsy_api = "https://openapi.etsy.com/v2/listings/active?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&keywords="+ this.selectType +"&location=Los Angeles,CA&limit=25";
+
+              etsyService.getListings(etsy_api).then(function(dataResponse) {
+                $scope.listings = dataResponse.data.results;
+              });
+            };
+
+            this.update = function(){
+              this.populateList();
+            };
+
+            this.populateList();
           },
           controllerAs: 'etsy',
           bindToController: true,
-          template: '<div class="container">'+
+          template: '<div class="row">'+
+                    '<select name="selectType" ng-model="etsy.selectType" ng-change="etsy.update()">'+
+                      '<option value="jewelry">Jewelry</option>'+
+                      '<option value="furniture">Furniture</option>'+
+                      '<option value="wedding">Wedding</option>'+
+                      '<option value="baby">Baby</option>'+
+                    '</select>'+
+                    '</div>'+
+                    '<div class="container">'+
                       '<div class="row" ng-repeat="listing in listings">'+
                           '<a href="{{listing.url}}" target="blank">'+
                             '<div class="col-md-1 col-sm-2 col-xs-4">'+
@@ -96,7 +114,6 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
                     '</div>'
         };
       });
-
     </script>
 
   </body>
