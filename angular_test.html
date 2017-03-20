@@ -1,0 +1,103 @@
+<!doctype html>
+<!-- Test for MomentFeed
+
+Output:
+1 HTML page or SPA with embedded AngularJS and CSS displaying results of an API request
+ 
+Output Requirements Detail:
+Javascript must request any data from any social API (Facebook,Instagram,Google,Youtube etc… whichever you prefer).
+Response of the request must be displayed and styled on the page.
+ 
+JS Bonus points: Use of AngularJS directives.
+CSS Bonus points: Use bootstrap css, sass etc..  -->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>MomentFeed Test - Recent Etsy Listings</title>
+    <meta name="description" content="MomentFeed Test - Recent Etsy Listings">
+    <meta name="author" content="rosettesor">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.3/angular.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" 
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" 
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous">
+
+    <style type="text/css">
+      h1, p {
+        padding-left: 50px;
+      }
+
+      .container > div:nth-of-type(odd) {
+        background-color: #ededed;
+      }
+
+      .row {
+        padding: 10px;
+      }
+    </style>
+  </head>
+
+  <body ng-app = "myapp">
+    <h1>Recent Etsy Listings from Los Angeles, CA</h1>
+    <p>Support local artists and craftmakers</p>
+    
+    <ng-etsy></ng-etsy>
+
+    <script>
+      var app = angular.module('myapp',[]);
+
+      // whitelist etsy api url
+      app.config(['$sceDelegateProvider', function($sceDelegateProvider) {
+        $sceDelegateProvider.resourceUrlWhitelist([
+          'self',
+          'https://openapi.etsy.com/**'
+        ]);
+      }])
+
+      // retrieve listings from etsy
+      .service('etsyService', function($http) {
+        var etsy_api = "https://openapi.etsy.com/v2/listings/active?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&location=Los Angeles,CA&limit=25";
+        this.getListings = function() {
+          return $http.get(etsy_api);
+        }
+      })
+
+      // show unicode as character
+      .filter('unsafe', function($sce) {
+        return function(val) {
+          return $sce.trustAsHtml(val);
+        };
+      })
+
+      // bind data to template and display
+      .directive('ngEtsy', function ($http) {
+        return {
+          controller: function ($scope, etsyService) {
+            etsyService.getListings().then(function(dataResponse) {
+              $scope.listings = dataResponse.data.results;
+              // console.log($scope.listings);
+            });
+          },
+          controllerAs: 'etsy',
+          bindToController: true,
+          template: '<div class="container">'+
+                      '<div class="row" ng-repeat="listing in listings">'+
+                          '<a href="{{listing.url}}" target="blank">'+
+                            '<div class="col-md-1 col-sm-2 col-xs-4">'+
+                              '<img ng-if="listing.Images[0].url_75x75" src="{{ listing.Images[0].url_75x75 }}">'+
+                            '</div>'+
+                            '<div class="col-md-10 col-sm-8 col-xs-4" ng-bind-html="listing.title | unsafe">{{ listing.title }}</div>'+
+                            '<div class="col-md-1 col-sm-2 col-xs-4">${{ listing.price }}</div>'+
+                          '</a>'+
+                      '</div>'+
+                    '</div>'
+        };
+      });
+
+    </script>
+
+  </body>
+</html>
