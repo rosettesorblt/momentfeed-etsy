@@ -26,12 +26,17 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
       crossorigin="anonymous">
 
     <style type="text/css">
-      h1, p, select {
+      h1, p, span {
         margin-left : 50px;
       }
 
       img {
         border-radius : 37px;
+        max-height    : 200px;
+      }
+
+      .container {
+        margin: 0px 45px 0px 45px;
       }
 
       .container > div:nth-of-type(odd) {
@@ -80,17 +85,34 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
       .directive('ngEtsy', function ($http) {
         return {
           controller: function ($scope, etsyService) {
-            this.selectType = 'jewelry';
+            this.typeOptions = [
+              {value: 'jewelry', name: 'Jewelry'},
+              {value: 'furniture', name: 'Furniture'},
+              {value: 'wedding', name: 'Wedding'},
+              {value: 'baby', name: 'Baby'}
+            ];
+            this.limitOptions = [
+              {value: 10},
+              {value: 25},
+              {value: 50},
+              {value: 100}
+            ];
+            this.selectedLimit = {value: 25};
+            this.selectedType  = {value: 'jewelry', name: 'Jewelry'};
+            $scope.loading = true;
 
             this.populateList = function() {
-              var etsy_api = "https://openapi.etsy.com/v2/listings/active.js?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&keywords="+ this.selectType +"&location=Los Angeles,CA&limit=25";
+              var etsy_api = "https://openapi.etsy.com/v2/listings/active.js?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&keywords="+ this.selectedType.value +"&location=Los Angeles,CA&limit=" + this.selectedLimit.value;
 
               etsyService.getListings(etsy_api).then(function(dataResponse) {
                 $scope.listings = dataResponse.data.results;
+                $scope.loading = false;
               });
+
             };
 
             this.update = function(){
+              $scope.loading = true;
               this.populateList();
             };
 
@@ -99,14 +121,14 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
           controllerAs: 'etsy',
           bindToController: true,
           template: '<div class="row">'+
-                    '<select name="selectType" ng-model="etsy.selectType" ng-change="etsy.update()">'+
-                      '<option value="jewelry">Jewelry</option>'+
-                      '<option value="furniture">Furniture</option>'+
-                      '<option value="wedding">Wedding</option>'+
-                      '<option value="baby">Baby</option>'+
-                    '</select>'+
+                      '<span>Category: '+
+                        '<select name="selectType" ng-init="etsy.selectedType = etsy.typeOptions[0]" ng-options="type.name for type in etsy.typeOptions" ng-model="etsy.selectedType" ng-change="etsy.update()"></select>'+
+                      '</span>'+
+                      '<span>Show: '+
+                        '<select name="selectLimit" ng-init="etsy.selectedLimit = etsy.limitOptions[1]" ng-options="limit.value for limit in etsy.limitOptions" ng-model="etsy.selectedLimit" ng-change="etsy.update()"></select>'+
+                      '</span>'+
                     '</div>'+
-                    '<div class="container">'+
+                    '<div ng-if="!loading" class="container">'+
                       '<div class="row" ng-repeat="listing in listings">'+
                           '<a href="{{listing.url}}" target="blank">'+
                             '<div class="col-md-1 col-sm-2 col-xs-4">'+
@@ -116,6 +138,9 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
                             '<div class="col-md-1 col-sm-2 col-xs-4">${{ listing.price }}</div>'+
                           '</a>'+
                       '</div>'+
+                    '</div>'+
+                    '<div ng-if="loading" class="col-md-12 load">'+
+                      '<img src="https://s-media-cache-ak0.pinimg.com/originals/0c/44/da/0c44dacf1b038014a6f941131c5e8aa2.gif">'+
                     '</div>'
         };
       });
