@@ -51,7 +51,7 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
     
     <ng-etsy></ng-etsy>
 
-    <script>
+    <script type="text/javascript">
       var app = angular.module('myapp',[]);
 
       // whitelist etsy api url
@@ -65,7 +65,7 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
       // retrieve listings from etsy
       .service('etsyService', function($http) {
         this.getListings = function(url) {
-          return $http.get(url);
+          return $http.jsonp(url);
         }
       })
 
@@ -83,7 +83,7 @@ CSS Bonus points: Use bootstrap css, sass etc..  -->
             this.selectType = 'jewelry';
 
             this.populateList = function() {
-              var etsy_api = "https://openapi.etsy.com/v2/listings/active?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&keywords="+ this.selectType +"&location=Los Angeles,CA&limit=25";
+              var etsy_api = "https://openapi.etsy.com/v2/listings/active.js?includes=Images:1:0&api_key=6afwt13a0qj0p0u4ktd6zeu2&keywords="+ this.selectType +"&location=Los Angeles,CA&limit=25";
 
               etsyService.getListings(etsy_api).then(function(dataResponse) {
                 $scope.listings = dataResponse.data.results;
